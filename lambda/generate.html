@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Single Use Singed URL</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    generate = function () {
+        var fname = $("#fname").val();
+        var eseconds = $("#eseconds").val();
+        var url = "{API_ENDPOINT}?file=" + fname + "&timeout=" + eseconds;
+        $.ajax({
+            url: url, success: function (result) {
+                console.info(JSON.stringify(result));
+                $("#genurl").val(result.url);
+                $("#outputdiv").show();
+            }
+        });
+    }
+
+    openurl = function () {
+        window.open($("#genurl").val(), '_blank');
+    }
+</script>
+<body>
+<div id="input">
+    <label for="fname">File Name</label><br>
+    <input type="text" id="fname" name="fname" value="helloworld.html" style="width: 300px"><br>
+    <label for="eseconds">Expire Seconds</label><br>
+    <input type="text" id="eseconds" name="eseconds" value="3600" style="width: 300px"><br>
+    <input type="button" value="Generate Single SignedURL" onclick="generate()"/><br><br><br>
+</div>
+<div id="outputdiv" style="display:none">
+    <label for="genurl">Generated URL</label><br>
+    <input type="text" id="genurl" name="genurl" value="" style="width: 800px"><br>
+    <input type="button" value="Open URL" onclick="openurl()"/>
+</div>
+</body>
+</html>

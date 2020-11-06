@@ -1,0 +1,15 @@
+.classpath.txt
+target
+.classpath
+.project
+.idea
+.settings
+.vscode
+*.iml
+.DS_Store
+lambda/uuid.txt
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+

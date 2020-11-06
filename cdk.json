@@ -1,0 +1,11 @@
+{
+  "app": "mvn -e -q compile exec:java",
+  "context": {
+    "@aws-cdk/core:enableStackNameDuplicates": "true",
+    "aws-cdk:enableDiffNoFail": "true",
+    "@aws-cdk/core:stackRelativeExports": "true",
+    "keyPairId": "ABCDEDG1234567890",
+    "secretName": "SignedURLPem",
+    "UUID": "09b561041a2a11ebadc10242ac120002"
+  }
+}
