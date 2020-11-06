@@ -29,9 +29,9 @@ Make sure you download your private key, and make a note of the key pair ID list
 1. From a terminal window at the root directory of this project do ```cdk synth```
 1. From a terminal window at the root directory of this project do ```cdk deploy```
 1. Once the deployment is complete the terminal window will display outputs of the deployment. One of the outputs will be ```CreateSignedURLEndpoint```, navigating to this endpoint will display a web page used to generate single use signed URLS.
-    * Click the **Generate Single SignedURL** button on this page to generate a signed url with the given sample helloworld.html sample file. <img  alt="Generate Web Page" src="./images/Generate.jpg" width="226" height="74">
-    * Click the **Open URL** button to display the file <img alt="Hello World Web Page" src="./images/HelloWorldPage.jpg" width="406" height="74">
-    * Once the file is displayed try refreshing to the page and notice **Invalid File** is now displayed.<img alt="Invalid Web Page" src="./images/InvalidFile.jpg" width="292" height="72">
+    * Click the **Generate Single SignedURL** button on this page to generate a signed url with the given sample helloworld.html sample file.</br><img  alt="Generate Web Page" src="./images/Generate.jpg" width="226" height="74">
+    * Click the **Open URL** button to display the file</br><img alt="Hello World Web Page" src="./images/HelloWorldPage.jpg" width="406" height="74">
+    * Once the file is displayed try refreshing to the page and notice **Invalid File** is now displayed.</br><img alt="Invalid Web Page" src="./images/InvalidFile.jpg" width="292" height="72">
 
 ### Resource Cleanup
 1. From a terminal window at the root directory of this project do ```cdk destroy```
