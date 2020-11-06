@@ -1,5 +1,5 @@
 # Single Use SignedURL
-AWS CDK to create a CloudFront distribution with a request Lambda to allow single use signed URL file downloads. Each file is tracked by and identifier which is stored in a DynamoDB database. 
+AWS CDK to create a CloudFront distribution with a request Lambda to allow single use signed URL file downloads. Each file is tracked by an identifier which is stored in a DynamoDB database. 
 Each request will check the identifier against values stored in the database. 
 If the identifier is found the file process continues and the files is received, the id is then removed from the database.
 If the identifier is not found the system will perform a 302 redirect to a specified URL.
