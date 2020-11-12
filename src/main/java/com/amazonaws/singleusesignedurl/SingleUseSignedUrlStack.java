@@ -38,7 +38,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.UUID;
+import java.util.Collections;
 
 public class SingleUseSignedUrlStack extends Stack {
     public SingleUseSignedUrlStack(final Construct scope, final String id) throws FileNotFoundException {
@@ -62,7 +62,7 @@ public class SingleUseSignedUrlStack extends Stack {
     }
 
     private Table createFileKeyTable(String uuid, String activekeysTableName) {
-        Table fileKeyTable = Table.Builder.create(this, "activekeys" + uuid)
+        return Table.Builder.create(this, "activekeys" + uuid)
                 .tableName(activekeysTableName)
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .partitionKey(Attribute.builder()
@@ -70,22 +70,19 @@ public class SingleUseSignedUrlStack extends Stack {
                         .type(AttributeType.STRING)
                         .build())
                 .build();
-
-
-        return fileKeyTable;
     }
 
     private PolicyStatement createGetSecretValuePolicyStatement() {
         return PolicyStatement.Builder.create()
-                .resources(Arrays.asList("arn:aws:secretsmanager:*:*:secret:*" + this.getNode().tryGetContext("secretName") + "*"))
-                .actions(Arrays.asList("secretsmanager:GetSecretValue"))
+                .resources(Collections.singletonList("arn:aws:secretsmanager:*:*:secret:*" + this.getNode().tryGetContext("secretName") + "*"))
+                .actions(Collections.singletonList("secretsmanager:GetSecretValue"))
                 .build();
     }
 
     private PolicyStatement createGetParametersPolicyStatement(String uuid) {
         return PolicyStatement.Builder.create()
-                .resources(Arrays.asList("arn:aws:ssm:*:*:parameter/*" + uuid + "*"))
-                .actions(Arrays.asList("ssm:GetParameters"))
+                .resources(Collections.singletonList("arn:aws:ssm:*:*:parameter/*" + uuid + "*"))
+                .actions(Collections.singletonList("ssm:GetParameters"))
                 .build();
     }
 
@@ -161,7 +158,7 @@ public class SingleUseSignedUrlStack extends Stack {
                 .build();
         BucketDeployment.Builder.create(this, "DeployTestFiles" + uuid)
                 .destinationKeyPrefix("")
-                .sources(Arrays.asList(Source.asset("./files")))
+                .sources(Collections.singletonList(Source.asset("./files")))
                 .destinationBucket(filesBucket)
                 .build();
         return filesBucket;
@@ -184,7 +181,7 @@ public class SingleUseSignedUrlStack extends Stack {
         Behavior distroBehavior = Behavior.builder()
                 .allowedMethods(CloudFrontAllowedMethods.GET_HEAD)
                 .isDefaultBehavior(true)
-                .lambdaFunctionAssociations(Arrays.asList(lambdaFunctionAssociation))
+                .lambdaFunctionAssociations(Collections.singletonList(lambdaFunctionAssociation))
                 .build();
         OriginAccessIdentity oadIdentity = OriginAccessIdentity.Builder.create(this, "OAI").build();
         S3OriginConfig s3OriginConfig = S3OriginConfig.builder()
@@ -201,7 +198,7 @@ public class SingleUseSignedUrlStack extends Stack {
                 .viewerProtocolPolicy(ViewerProtocolPolicy.REDIRECT_TO_HTTPS)
                 .httpVersion(HttpVersion.HTTP2)
                 .loggingConfig(LoggingConfiguration.builder().bucket(cfLogsBucket).prefix("cf-logs/").build())
-                .originConfigs(Arrays.asList(scDistro))
+                .originConfigs(Collections.singletonList(scDistro))
                 .build();
 
         CfnOutput.Builder.create(this, "singleusesignedurl-domain")
