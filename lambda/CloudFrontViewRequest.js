@@ -75,6 +75,10 @@ const getSystemsManagerValues = (query) => {
 exports.handler = (event, context, callback) => {
     console.info("Event:" + JSON.stringify(event));
     console.info("Context:" + JSON.stringify(context));
+    if (event == undefined || event.Records == undefined || event.Records.length == 0) {
+        notFoundReponse(callback);
+        return;
+    }
     let querystring = event.Records[0].cf.request.querystring;
     let vars = querystring.split('&');
     let id = '';
