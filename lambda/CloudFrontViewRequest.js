@@ -65,6 +65,8 @@ const getSystemsManagerValues = (query) => {
 }
 
 exports.handler = (event, context, callback) => {
+    console.info("Event:" + JSON.stringify(event));
+    console.info("Context:" + JSON.stringify(context));
     let querystring = event.Records[0].cf.request.querystring;
     let vars = querystring.split('&');
     let id = '';
@@ -74,6 +76,10 @@ exports.handler = (event, context, callback) => {
             id = decodeURIComponent(pair[1]);
             break;
         }
+    }
+    if (id == '') {
+        callback(null, event.Records[0].cf.request);
+        return;
     }
     console.info("id:" + id);
 
