@@ -46,6 +46,14 @@ function redirectReponse(err, callback) {
     callback(null, response);
 }
 
+function notFoundReponse(callback) {
+    const response = {
+        status: '404',
+        statusDescription: 'Not Found'
+    };
+    callback(null, response);
+}
+
 const getSystemsManagerValues = (query) => {
     return new Promise((resolve, reject) => {
         ssm.getParameters(query, function (err, data) {
@@ -77,11 +85,12 @@ exports.handler = (event, context, callback) => {
             break;
         }
     }
+    console.info("id:" + id);
+
     if (id == '') {
-        callback(null, event.Records[0].cf.request);
+        notFoundReponse(callback);
         return;
     }
-    console.info("id:" + id);
 
     getSystemsManagerValues(paramQuery).then(smParams => {
         redirectURL = "https://" + domain + "/web/reauth.html";
