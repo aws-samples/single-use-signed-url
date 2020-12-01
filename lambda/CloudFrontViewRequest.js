@@ -20,16 +20,19 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const uuid = fs.readFileSync('uuid.txt');
-const execRegion = fs.readFileSync('region.txt');
+const ssm = new AWS.SSM();
+let dynamoDB;
 const cfDomainParamName = "singleusesignedurl-domain-" + uuid,
-    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid;
+    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid,
+    dynamoDBRegionParamName = "singleusesignedurl-dynamodb-region-" + uuid;
 const paramQuery = {
-    "Names": [cfDomainParamName, activeKeysTableParamName],
+    "Names": [cfDomainParamName, activeKeysTableParamName, dynamoDBRegionParamName],
     "WithDecryption": true
 }
 let dynamoDBTableName = '',
     domain = '',
-    redirectURL = '';
+    redirectURL = '',
+    dynamoDBRegion = '';
 
 function redirectReponse(err, callback) {
     const response = {
@@ -62,7 +65,6 @@ function badRequestReponse(err, callback) {
 }
 
 const getSystemsManagerValues = (query) => {
-    const ssm = new AWS.SSM({"region": '' + execRegion});
     return new Promise((resolve, reject) => {
         ssm.getParameters(query, function (err, data) {
             if (err) {
@@ -73,6 +75,8 @@ const getSystemsManagerValues = (query) => {
                     dynamoDBTableName = i.Value
                 } else if (i.Name === cfDomainParamName) {
                     domain = i.Value
+                } else if (i.Name === dynamoDBRegionParamName) {
+                    dynamoDBRegion = i.Value
                 }
             }
             resolve({});
@@ -109,7 +113,7 @@ exports.handler = (event, context, callback) => {
 
     getSystemsManagerValues(paramQuery).then(() => {
         redirectURL = "https://" + domain + "/web/reauth.html";
-        const dynamoDB = new AWS.DynamoDB({maxRetries: 0, endpoint: "https://dynamodb." + execRegion + ".amazonaws.com"});
+        dynamoDB = new AWS.DynamoDB({maxRetries: 0, endpoint: "https://dynamodb." + dynamoDBRegion + ".amazonaws.com"});
         let dbQuery = {
             TableName: dynamoDBTableName,
             Key: {
