@@ -6,7 +6,7 @@
     "@aws-cdk/core:stackRelativeExports": "true",
     "keyPairId": "ABCD1234567890",
     "secretName": "SignedURLPem",
-    "dynamoDBRegion": "us-east-1",
+    "region": "us-east-1",
     "UUID": "09b561041a2a11ebadc10242ac120003"
   }
 }

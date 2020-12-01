@@ -26,6 +26,7 @@ Make sure you download your private key, and make a note of the key pair ID list
 1. Edit the cdk.json file and update the following values:
     * keyPairId - The Id of the CloudFront Key Pair
     * secretName - The name of the secrets manager value that holds the PEM file used to sign URLs
+    * region - The region you will be deploying into. This is used to access the resources in the correct region due to CloudFront executing Lambda in the region closest to the end user.
 1. From a terminal window at the root directory of this project do ```cdk synth```
 1. From a terminal window at the root directory of this project do ```cdk deploy```
 1. Once the deployment is complete the terminal window will display outputs of the deployment. One of the outputs will be ```CreateSignedURLEndpoint```, navigating to this endpoint will display a web page used to generate single use signed URLS.

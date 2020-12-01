@@ -8,6 +8,7 @@ target
 *.iml
 .DS_Store
 lambda/uuid.txt
+lambda/region.txt
 
 # CDK asset staging directory
 .cdk.staging

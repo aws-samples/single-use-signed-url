@@ -39,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 
 public class SingleUseSignedUrlStack extends Stack {
     public SingleUseSignedUrlStack(final Construct scope, final String id) throws FileNotFoundException {
@@ -48,6 +49,7 @@ public class SingleUseSignedUrlStack extends Stack {
     public SingleUseSignedUrlStack(final Construct scope, final String id, final StackProps props) throws FileNotFoundException {
         super(scope, id, props);
         String uuid = getShortenedUUID();
+        outputRegionFile();
 
         Table fileKeyTable = createFileKeyTable(uuid, "singleusesignedurl-activekeys-" + uuid);
         PolicyStatement secretValuePolicy = createGetSecretValuePolicyStatement();
@@ -215,7 +217,6 @@ public class SingleUseSignedUrlStack extends Stack {
         String keyPairIdParamName = "singleusesignedurl-keyPairId-" + uuid;
         String secretNameParamName = "singleusesignedurl-secretName-" + uuid;
         String apiEndpointParamName = "singleusesignedurl-api-endpoint-" + uuid;
-        String dynamoDBRegionParamName = "singleusesignedurl-dynamodb-region-" + uuid;
         StringParameter.Builder.create(this, cfDomainParamName)
                 .allowedPattern(".*")
                 .description("The cloud front domain name")
@@ -251,20 +252,26 @@ public class SingleUseSignedUrlStack extends Stack {
                 .stringValue(fileKeyTable.getTableName())
                 .tier(ParameterTier.STANDARD)
                 .build();
-        StringParameter.Builder.create(this, dynamoDBRegionParamName)
-                .allowedPattern(".*")
-                .description("The dynamodb region to use in the lambda")
-                .parameterName(dynamoDBRegionParamName)
-                .stringValue((String) this.getNode().tryGetContext("dynamoDBRegion"))
-                .tier(ParameterTier.STANDARD)
-                .build();
     }
 
     public String getShortenedUUID() throws FileNotFoundException {
-        String uuid = ((String) this.getNode().tryGetContext("UUID")).replace("-","");
-        try (PrintStream out = new PrintStream(new FileOutputStream("./lambda/uuid.txt"))) {
-            out.print(uuid);
+        if (this.getNode().tryGetContext("UUID") != null) {
+            String uuid = ((String) this.getNode().tryGetContext("UUID")).replace("-", "");
+            try (PrintStream out = new PrintStream(new FileOutputStream("./lambda/uuid.txt"))) {
+                out.print(uuid);
+            }
+            return uuid;
+        } else {
+            return UUID.randomUUID().toString();
         }
-        return uuid;
+    }
+
+    public void outputRegionFile() throws FileNotFoundException {
+        Object region = this.getNode().tryGetContext("region");
+        if (region != null) {
+            try (PrintStream out = new PrintStream(new FileOutputStream("./lambda/region.txt"))) {
+                out.print((String)region);
+            }
+        }
     }
 }
