@@ -215,6 +215,7 @@ public class SingleUseSignedUrlStack extends Stack {
         String keyPairIdParamName = "singleusesignedurl-keyPairId-" + uuid;
         String secretNameParamName = "singleusesignedurl-secretName-" + uuid;
         String apiEndpointParamName = "singleusesignedurl-api-endpoint-" + uuid;
+        String dynamoDBRegionParamName = "singleusesignedurl-dynamodb-region-" + uuid;
         StringParameter.Builder.create(this, cfDomainParamName)
                 .allowedPattern(".*")
                 .description("The cloud front domain name")
@@ -248,6 +249,13 @@ public class SingleUseSignedUrlStack extends Stack {
                 .description("The database name")
                 .parameterName(activeKeysTableParamName)
                 .stringValue(fileKeyTable.getTableName())
+                .tier(ParameterTier.STANDARD)
+                .build();
+        StringParameter.Builder.create(this, dynamoDBRegionParamName)
+                .allowedPattern(".*")
+                .description("The dynamodb region to use in the lambda")
+                .parameterName(dynamoDBRegionParamName)
+                .stringValue((String) this.getNode().tryGetContext("dynamoDBRegion"))
                 .tier(ParameterTier.STANDARD)
                 .build();
     }

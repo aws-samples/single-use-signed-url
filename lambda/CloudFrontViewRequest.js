@@ -21,16 +21,18 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const uuid = fs.readFileSync('uuid.txt');
 const ssm = new AWS.SSM();
-const dynamoDB = new AWS.DynamoDB({maxRetries: 0});
+let dynamoDB;
 const cfDomainParamName = "singleusesignedurl-domain-" + uuid,
-    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid;
+    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid,
+    dynamoDBRegionParamName = "singleusesignedurl-dynamodb-region-" + uuid;
 const paramQuery = {
-    "Names": [cfDomainParamName, activeKeysTableParamName],
+    "Names": [cfDomainParamName, activeKeysTableParamName, dynamoDBRegionParamName],
     "WithDecryption": true
 }
 let dynamoDBTableName = '',
     domain = '',
-    redirectURL = '';
+    redirectURL = '',
+    dynamoDBRegion = '';
 
 function redirectReponse(err, callback) {
     const response = {
@@ -46,10 +48,18 @@ function redirectReponse(err, callback) {
     callback(null, response);
 }
 
-function notFoundReponse(callback) {
+function notFoundResponse(callback) {
     const response = {
         status: '404',
         statusDescription: 'Not Found'
+    };
+    callback(null, response);
+}
+
+function badRequestReponse(err, callback) {
+    const response = {
+        status: '400',
+        statusDescription: 'Bad Request: ' + err
     };
     callback(null, response);
 }
@@ -65,6 +75,8 @@ const getSystemsManagerValues = (query) => {
                     dynamoDBTableName = i.Value
                 } else if (i.Name === cfDomainParamName) {
                     domain = i.Value
+                } else if (i.Name === dynamoDBRegionParamName) {
+                    dynamoDBRegion = i.Value
                 }
             }
             resolve({});
@@ -74,9 +86,13 @@ const getSystemsManagerValues = (query) => {
 
 exports.handler = (event, context, callback) => {
     console.info("Event:" + JSON.stringify(event));
-    console.info("Context:" + JSON.stringify(context));
-    if (event == undefined || event.Records == undefined || event.Records.length == 0) {
-        notFoundReponse(callback);
+    if (typeof event == "undefined"
+        || typeof event.Records == "undefined"
+        || event.Records.length === 0
+        || typeof event.Records[0].cf == "undefined"
+        || typeof event.Records[0].cf.request == "undefined"
+        || typeof event.Records[0].cf.request.querystring == "undefined") {
+        badRequestReponse('Invalid parameters', callback);
         return;
     }
     let querystring = event.Records[0].cf.request.querystring;
@@ -84,20 +100,20 @@ exports.handler = (event, context, callback) => {
     let id = '';
     for (let i = 0; i < vars.length; i++) {
         let pair = vars[i].split('=');
-        if (decodeURIComponent(pair[0]) == 'id') {
+        if (decodeURIComponent(pair[0]) === 'id') {
             id = decodeURIComponent(pair[1]);
             break;
         }
     }
-    console.info("id:" + id);
 
-    if (id == '') {
-        notFoundReponse(callback);
+    if (id === '') {
+        notFoundResponse(callback);
         return;
     }
 
-    getSystemsManagerValues(paramQuery).then(smParams => {
+    getSystemsManagerValues(paramQuery).then(() => {
         redirectURL = "https://" + domain + "/web/reauth.html";
+        dynamoDB = new AWS.DynamoDB({maxRetries: 0, endpoint: "https://dynamodb." + dynamoDBRegion + ".amazonaws.com"});
         let dbQuery = {
             TableName: dynamoDBTableName,
             Key: {
@@ -114,12 +130,12 @@ exports.handler = (event, context, callback) => {
                     dynamoDB
                         .deleteItem(dbQuery)
                         .promise()
-                        .then(res => {
+                        .then(() => {
                             callback(null, event.Records[0].cf.request);
                         })
                         .catch(err => {
                             console.error("DynamoDB Delete Error: " + JSON.stringify(err));
-                            redirectReponse(err.code, callback);
+                            badRequestReponse(JSON.stringify(err), callback);
                         });
                 } else { // item not found so redirect to fallback page
                     redirectReponse('Item not found', callback);
@@ -127,10 +143,10 @@ exports.handler = (event, context, callback) => {
             })
             .catch(err => {
                 console.error("Error: " + JSON.stringify(err))
-                redirectReponse(err, callback);
+                badRequestReponse(JSON.stringify(err), callback);
             });
     }).catch(err => {
-        console.error("Error getting parameter: " + JSON.stringify(err))
-        context.fail(err);
+        console.error("Error getting parameter: " + JSON.stringify(err));
+        badRequestReponse(JSON.stringify(err), callback);
     });
 };
