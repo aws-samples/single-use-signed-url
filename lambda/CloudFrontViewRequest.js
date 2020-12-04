@@ -20,19 +20,18 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 const uuid = fs.readFileSync('uuid.txt');
+const dynamoDBRegion = fs.readFileSync('region.txt');
 const ssm = new AWS.SSM();
 let dynamoDB;
 const cfDomainParamName = "singleusesignedurl-domain-" + uuid,
-    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid,
-    dynamoDBRegionParamName = "singleusesignedurl-dynamodb-region-" + uuid;
+    activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid;
 const paramQuery = {
-    "Names": [cfDomainParamName, activeKeysTableParamName, dynamoDBRegionParamName],
+    "Names": [cfDomainParamName, activeKeysTableParamName],
     "WithDecryption": true
 }
 let dynamoDBTableName = '',
     domain = '',
-    redirectURL = '',
-    dynamoDBRegion = '';
+    redirectURL = '';
 
 function redirectReponse(err, callback) {
     const response = {
@@ -75,8 +74,6 @@ const getSystemsManagerValues = (query) => {
                     dynamoDBTableName = i.Value
                 } else if (i.Name === cfDomainParamName) {
                     domain = i.Value
-                } else if (i.Name === dynamoDBRegionParamName) {
-                    dynamoDBRegion = i.Value
                 }
             }
             resolve({});
