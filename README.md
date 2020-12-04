@@ -11,6 +11,7 @@ If the identifier is not found the system will perform a 302 redirect to a speci
 * A CloudFront Key Pair
 * The CloudFront Key Pair private key PEM file
 * <a href="https://docs.aws.amazon.com/cdk/latest/guide/cli.html">AWS CDK Toolkit</a>
+* CloudFront Triggers for Lambda Functions must execute in US East (N. Virginia) Region <a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-requirements-limits.html#lambda-requirements-cloudfront-triggers">see requirements doc</a>
 
 ### Setup
 1. Create a CloudFront Key Pair (**Root Account required**).
@@ -26,7 +27,7 @@ Make sure you download your private key, and make a note of the key pair ID list
 1. Edit the cdk.json file and update the following values:
     * keyPairId - The Id of the CloudFront Key Pair
     * secretName - The name of the secrets manager value that holds the PEM file used to sign URLs
-    * region - The region you will be deploying into. This is used to access the resources in the correct region due to CloudFront executing Lambda in the region closest to the end user.
+    * region - The region your DynamoDB and parameter store are located in. Due to CloudFront Edge Lambda requirement to execute in us-east-1 this value is required to execute the calls to other services in another region.
 1. From a terminal window at the root directory of this project do ```cdk synth```
 1. From a terminal window at the root directory of this project do ```cdk deploy```
 1. Once the deployment is complete the terminal window will display outputs of the deployment. One of the outputs will be ```CreateSignedURLEndpoint```, navigating to this endpoint will display a web page used to generate single use signed URLS.
