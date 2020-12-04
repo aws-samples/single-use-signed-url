@@ -82,6 +82,7 @@ const getSystemsManagerValues = (query) => {
 }
 
 exports.handler = (event, context, callback) => {
+    AWS.config.update({'region': '' + dynamoDBRegion});
     console.info("Event:" + JSON.stringify(event));
     if (typeof event == "undefined"
         || typeof event.Records == "undefined"
