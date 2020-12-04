@@ -21,7 +21,6 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const uuid = fs.readFileSync('uuid.txt');
 const dynamoDBRegion = fs.readFileSync('region.txt');
-const ssm = new AWS.SSM();
 let dynamoDB;
 const cfDomainParamName = "singleusesignedurl-domain-" + uuid,
     activeKeysTableParamName = "singleusesignedurl-activekeys-" + uuid;
@@ -65,6 +64,7 @@ function badRequestReponse(err, callback) {
 
 const getSystemsManagerValues = (query) => {
     return new Promise((resolve, reject) => {
+        const ssm = new AWS.SSM({'region': '' + dynamoDBRegion});
         ssm.getParameters(query, function (err, data) {
             if (err) {
                 return reject(err);
