@@ -25,6 +25,7 @@ Make sure you download your private key, and make a note of the key pair ID list
     * Enter a secret name (SignedURLPem is used in this sample)
     * Save the secret
 1. Edit the cdk.json file and update the following values:
+    * UUID - A unique string value used in bucket creation and service linking. This value must be unique across all AWS customers. It is suggested to generate a UUID for this value.
     * keyPairId - The Id of the CloudFront Key Pair
     * secretName - The name of the secrets manager value that holds the PEM file used to sign URLs
     * region - The region your DynamoDB and parameter store are located in. Due to CloudFront Edge Lambda requirement to execute in us-east-1 this value is required to execute the calls to other services in another region.

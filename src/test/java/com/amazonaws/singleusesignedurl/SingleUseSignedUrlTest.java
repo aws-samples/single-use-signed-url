@@ -37,6 +37,8 @@ public class SingleUseSignedUrlTest {
         java.util.Map<String,String> context = new HashMap<>();
         context.put("keyPairId", "123456ABCD");
         context.put("secretName", "123456ABCD");
+        context.put("region", "us-east-1");
+        context.put("UUID", "testuuid");
         App app = App.Builder.create().context(context).build();
 
         SingleUseSignedUrlStack stack = new SingleUseSignedUrlStack(app, "test");

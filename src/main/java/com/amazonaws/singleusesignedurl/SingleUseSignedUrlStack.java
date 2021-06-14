@@ -19,6 +19,7 @@
 package com.amazonaws.singleusesignedurl;
 
 import software.amazon.awscdk.core.*;
+import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.services.apigateway.LambdaRestApi;
 import software.amazon.awscdk.services.apigateway.StageOptions;
 import software.amazon.awscdk.services.cloudfront.*;
@@ -37,16 +38,15 @@ import software.amazon.awscdk.services.ssm.StringParameter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
+import java.security.InvalidParameterException;
+import java.util.*;
 
 public class SingleUseSignedUrlStack extends Stack {
-    public SingleUseSignedUrlStack(final Construct scope, final String id) throws FileNotFoundException {
+    public SingleUseSignedUrlStack(final Construct scope, final String id) throws FileNotFoundException, InvalidParameterException {
         this(scope, id, null);
     }
 
-    public SingleUseSignedUrlStack(final Construct scope, final String id, final StackProps props) throws FileNotFoundException {
+    public SingleUseSignedUrlStack(final Construct scope, final String id, final StackProps props) throws FileNotFoundException, InvalidParameterException {
         super(scope, id, props);
         String uuid = getShortenedUUID();
         outputRegionFile();
@@ -55,11 +55,13 @@ public class SingleUseSignedUrlStack extends Stack {
         PolicyStatement secretValuePolicy = createGetSecretValuePolicyStatement();
         PolicyStatement getParameterPolicy = createGetParametersPolicyStatement(uuid);
         Function createSignedURLHandler = createCreateSignedURLHandlerFunction(uuid, secretValuePolicy, getParameterPolicy, fileKeyTable);
-        LambdaRestApi createSignedURLApi = createCreateSignedURLRestApi(uuid, createSignedURLHandler);
+
         Version cloudFrontViewRequestHandlerV1 = createcloudFrontViewRequestHandlerFunction(uuid, secretValuePolicy, getParameterPolicy, fileKeyTable);
         Bucket cfLogsBucket = createCloudFrontLogBucket(uuid);
         Bucket filesBucket = createFilesBucket(uuid, "singleusesignedurl-files-" + uuid);
         CloudFrontWebDistribution cloudFrontWebDistribution = createCloudFrontWebDistribution(uuid, cloudFrontViewRequestHandlerV1, cfLogsBucket, filesBucket);
+
+        LambdaRestApi createSignedURLApi = createCreateSignedURLRestApi(uuid, createSignedURLHandler);
         createParameters(uuid, fileKeyTable, createSignedURLApi, cloudFrontWebDistribution);
     }
 
@@ -72,6 +74,18 @@ public class SingleUseSignedUrlStack extends Stack {
                         .type(AttributeType.STRING)
                         .build())
                 .build();
+    }
+
+    private Map<String, String> createStageVariables(LambdaRestApi createSignedURLApi) {
+        Map<String, String> variables = new HashMap<>();
+        //variables.put("CloudFrontDistributionDomainName", cloudFrontWebDistribution.getDistributionDomainName());
+        //variables.put("APIEndPoint", createSignedURLApi.getUrl() + "CreateSignedURL" + uuid);
+        variables.put("KeyPairId", (String) this.getNode().tryGetContext("keyPairId"));
+        variables.put("SecretName", (String) this.getNode().tryGetContext("secretName"));
+        //variables.put("DBName", fileKeyTable.getTableName());
+        variables.put("Region", (String)this.getNode().tryGetContext("region"));
+
+        return variables;
     }
 
     private PolicyStatement createGetSecretValuePolicyStatement() {
@@ -207,6 +221,7 @@ public class SingleUseSignedUrlStack extends Stack {
                 .exportName("singleusesignedurl-domain")
                 .value(cloudFrontWebDistribution.getDistributionDomainName())
                 .build();
+
         return cloudFrontWebDistribution;
     }
 
@@ -254,15 +269,16 @@ public class SingleUseSignedUrlStack extends Stack {
                 .build();
     }
 
-    public String getShortenedUUID() throws FileNotFoundException {
-        if (this.getNode().tryGetContext("UUID") != null) {
+    public String getShortenedUUID() throws FileNotFoundException, InvalidParameterException {
+        Object uuidObj = this.getNode().tryGetContext("UUID");
+        if (uuidObj != null) {
             String uuid = ((String) this.getNode().tryGetContext("UUID")).replace("-", "");
             try (PrintStream out = new PrintStream(new FileOutputStream("./lambda/uuid.txt"))) {
                 out.print(uuid);
             }
             return uuid;
         } else {
-            return UUID.randomUUID().toString();
+            throw new InvalidParameterException("Missing UUID in cdk.json: " + (uuidObj == null ? "null" : uuidObj.toString()));
         }
     }
 
