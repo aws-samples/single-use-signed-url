@@ -18,8 +18,10 @@
 
 package com.amazonaws.singleusesignedurl;
 
-import software.amazon.awscdk.core.*;
-import software.amazon.awscdk.core.Stack;
+import software.amazon.awscdk.CfnOutput;
+import software.amazon.awscdk.RemovalPolicy;
+import software.amazon.awscdk.Stack;
+import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.apigateway.LambdaRestApi;
 import software.amazon.awscdk.services.apigateway.StageOptions;
 import software.amazon.awscdk.services.cloudfront.*;
@@ -28,12 +30,14 @@ import software.amazon.awscdk.services.dynamodb.AttributeType;
 import software.amazon.awscdk.services.dynamodb.Table;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.lambda.*;
+import software.amazon.awscdk.services.lambda.Function;
 import software.amazon.awscdk.services.lambda.Runtime;
 import software.amazon.awscdk.services.s3.Bucket;
 import software.amazon.awscdk.services.s3.deployment.BucketDeployment;
 import software.amazon.awscdk.services.s3.deployment.Source;
 import software.amazon.awscdk.services.ssm.ParameterTier;
 import software.amazon.awscdk.services.ssm.StringParameter;
+import software.constructs.Construct;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -74,18 +78,6 @@ public class SingleUseSignedUrlStack extends Stack {
                         .type(AttributeType.STRING)
                         .build())
                 .build();
-    }
-
-    private Map<String, String> createStageVariables(LambdaRestApi createSignedURLApi) {
-        Map<String, String> variables = new HashMap<>();
-        //variables.put("CloudFrontDistributionDomainName", cloudFrontWebDistribution.getDistributionDomainName());
-        //variables.put("APIEndPoint", createSignedURLApi.getUrl() + "CreateSignedURL" + uuid);
-        variables.put("KeyPairId", (String) this.getNode().tryGetContext("keyPairId"));
-        variables.put("SecretName", (String) this.getNode().tryGetContext("secretName"));
-        //variables.put("DBName", fileKeyTable.getTableName());
-        variables.put("Region", (String)this.getNode().tryGetContext("region"));
-
-        return variables;
     }
 
     private PolicyStatement createGetSecretValuePolicyStatement() {
@@ -282,6 +274,7 @@ public class SingleUseSignedUrlStack extends Stack {
         }
     }
 
+    // Using a region file to the lack of being able to use environment variables with CloudFront Lambda functions
     public void outputRegionFile() throws FileNotFoundException {
         Object region = this.getNode().tryGetContext("region");
         if (region != null) {

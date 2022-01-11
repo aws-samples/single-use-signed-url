@@ -18,7 +18,7 @@
 
 package com.amazonaws.singleusesignedurl;
 
-import software.amazon.awscdk.core.App;
+import software.amazon.awscdk.App;
 
 import java.io.FileNotFoundException;
 
